@@ -11,3 +11,49 @@ from mini.dns.dns_browser import WiFiDevice
 MiniSdk.set_robot_type(MiniSdk.RobotType.EDU) #AlphaMini Overseased, declaration -> Important
 MiniSdk.set_log_level(logging.INFO)
 MiniSdk.set_log_level(logging.DEBUG)
+# 测试, 执行一个动作文件
+async def test_play_action():
+    # action_name: 动作文件名, 可以通过GetActionList获取机器人支持的动作
+    block: PlayAction = PlayAction(action_name='bow_avatar')
+    # response: PlayActionResponse
+    (resultType, response) = await block.execute()
+    print(f'test_play_action result:{response}')
+    assert resultType == MiniApiResultType.Success, 'test_play_action timetout'
+    assert response is not None and isinstance(response, PlayActionResponse), 'test_play_action result unavailable'
+    assert response.isSuccess, 'play_action failed'
+
+async def test_play_action2():
+    # action_name: 动作文件名, 可以通过GetActionList获取机器人支持的动作
+    block: PlayAction = PlayAction(action_name='face_029')
+    # response: PlayActionResponse
+    (resultType, response) = await block.execute()
+    print(f'test_play_action result:{response}')
+    assert resultType == MiniApiResultType.Success, 'test_play_action timetout'
+    assert response is not None and isinstance(response, PlayActionResponse), 'test_play_action result unavailable'
+    assert response.isSuccess, 'play_action failed'
+
+async def test_get_action_list():
+    block: GetActionList = GetActionList(action_type=RobotActionType.INNER)
+    (resultType, response) = await block.execute()
+    print(f'test_get_action_list result:{response}')
+    assert resultType == MiniApiResultType.Success, 'test_get_action_list timetout'
+    assert response is not None and isinstance(response,
+    GetActionListResponse), 'test_get_action_list result unavailable'
+    assert response.isSuccess, 'get_action_list failed'
+async def get_device_by_name():
+    result: WiFiDevice = await MiniSdk.get_device_by_name("00418", 10) #Please enter AlphaMini-Robot ID "00352"
+    print(f"test_get_device_by_name result:{result}")
+    return result
+async def main():
+    device: WiFiDevice = await get_device_by_name()
+    if device:
+        await MiniSdk.connect(device)
+        await MiniSdk.enter_program()
+        await test_play_action()
+        await test_play_action2()
+        #await test_play_action2()
+        await test_get_action_list()
+        await MiniSdk.quit_program()
+        await MiniSdk.release()
+if __name__ == '__main__':
+    asyncio.run(main())
