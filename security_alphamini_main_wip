@@ -1,59 +1,153 @@
+#========================================================================================================================================
 import asyncio
+
 import logging
 
+
+
 from mini import mini_sdk as MiniSdk
+
+from mini.apis.api_sound import StartPlayTTS, StopPlayTTS, ControlTTSResponse
+
+from mini.apis.api_sound import StopAllAudio, StopAudioResponse
+
 from mini.apis.api_action import GetActionList, GetActionListResponse, RobotActionType
+
 from mini.apis.api_action import MoveRobot, MoveRobotDirection, MoveRobotResponse
+
 from mini.apis.api_action import PlayAction, PlayActionResponse
+
 from mini.apis.base_api import MiniApiResultType
+
 from mini.dns.dns_browser import WiFiDevice
-#from test.test_connect import test_get_device_by_name
+
+#from test.test_connect import test_get_device_by_name 
+
+
 MiniSdk.set_robot_type(MiniSdk.RobotType.EDU) #AlphaMini Overseased, declaration -> Important
+
 MiniSdk.set_log_level(logging.INFO)
+
 MiniSdk.set_log_level(logging.DEBUG)
-# 测试, 执行一个动作文件
-async def test_play_action():
-    # action_name: 动作文件名, 可以通过GetActionList获取机器人支持的动作
-    block: PlayAction = PlayAction(action_name='bow_avatar')
-    # response: PlayActionResponse
-    (resultType, response) = await block.execute()
-    print(f'test_play_action result:{response}')
-    assert resultType == MiniApiResultType.Success, 'test_play_action timetout'
-    assert response is not None and isinstance(response, PlayActionResponse), 'test_play_action result unavailable'
-    assert response.isSuccess, 'play_action failed'
+
+# 测试, 执行一个动作文件
 
 async def test_play_action2():
+
+#==============================================connect to 00418 ================================================
+
+async def get_device_by_name():
+
+  result: WiFiDevice = await MiniSdk.get_device_by_name("00418", 10) #Please enter AlphaMini-Robot ID "00418"
+
+  print(f"test_get_device_by_name result:{result}")
+
+  return result
+
+#==============================turn robot clockwise 5 steps (90 degree turn to indicate allow entrance)=========
+
+async def test_move_robot_right():
+
+  block: MoveRobot = MoveRobot(step=5, direction=MoveRobotDirection.RIGHTWARD)
+
+  (resultType, response) = await block.execute()
+
+  print(f'test_move_robot result:{response}')
+
+  assert resultType == MiniApiResultType.Success, 'test_move_robot timetout'
+
+  assert response is not None and isinstance(response, MoveRobotResponse), 'test_move_robot result unavailable'
+
+  assert response.isSuccess, 'move_robot failed'
+
+#==============================turn robot counter-clockwise 5 steps (90 degree turn back to come to original possition)======
+
+async def test_move_robot_left():
+
+  block: MoveRobot = MoveRobot(step=5, direction=MoveRobotDirection.LEFTWARD)
+
+  (resultType, response) = await block.execute()
+
+  print(f'test_move_robot result:{response}')
+
+  assert resultType == MiniApiResultType.Success, 'test_move_robot timetout'
+
+  assert response is not None and isinstance(response, MoveRobotResponse), 'test_move_robot result unavailable'
+
+  assert response.isSuccess, 'move_robot failed'
+
+#=======================================bowing(to indicate authorised user identified)==========================
+
+async def test_play_action_recognised_user():
+
     # action_name: 动作文件名, 可以通过GetActionList获取机器人支持的动作
-    block: PlayAction = PlayAction(action_name='face_029')
+
+    block: PlayAction = PlayAction(action_name='bow_avatar')
+
     # response: PlayActionResponse
+
     (resultType, response) = await block.execute()
+
     print(f'test_play_action result:{response}')
+
     assert resultType == MiniApiResultType.Success, 'test_play_action timetout'
+
     assert response is not None and isinstance(response, PlayActionResponse), 'test_play_action result unavailable'
+
     assert response.isSuccess, 'play_action failed'
 
-async def test_get_action_list():
-    block: GetActionList = GetActionList(action_type=RobotActionType.INNER)
+#================================================detected unauthorised visitor===================================================
+
+async def test_play_action_unauthorised_user():
+
+    # action_name: 动作文件名, 可以通过GetActionList获取机器人支持的动作
+
+    block: PlayAction = PlayAction(action_name='face_029')
+
+    # response: PlayActionResponse
+
     (resultType, response) = await block.execute()
-    print(f'test_get_action_list result:{response}')
-    assert resultType == MiniApiResultType.Success, 'test_get_action_list timetout'
-    assert response is not None and isinstance(response,
-    GetActionListResponse), 'test_get_action_list result unavailable'
-    assert response.isSuccess, 'get_action_list failed'
-async def get_device_by_name():
-    result: WiFiDevice = await MiniSdk.get_device_by_name("00418", 10) #Please enter AlphaMini-Robot ID "00352"
-    print(f"test_get_device_by_name result:{result}")
-    return result
-async def main():
-    device: WiFiDevice = await get_device_by_name()
-    if device:
-        await MiniSdk.connect(device)
-        await MiniSdk.enter_program()
-        await test_play_action()
-        await test_play_action2()
-        #await test_play_action2()
-        await test_get_action_list()
-        await MiniSdk.quit_program()
-        await MiniSdk.release()
-if __name__ == '__main__':
-    asyncio.run(main())
+
+    print(f'test_play_action result:{response}')
+
+    assert resultType == MiniApiResultType.Success, 'test_play_action timetout'
+
+    assert response is not None and isinstance(response, PlayActionResponse), 'test_play_action result unavailable'
+
+    assert response.isSuccess, 'play_action failed'
+
+#========================================text-to-speech (welcome)===================================================================
+
+async def _play_tts_welcome():
+
+  block: StartPlayTTS = StartPlayTTS(text="Welcome to test facility. Standby for identification.")
+
+  (resultType, response) = await block.execute()
+
+  print(f'{response}')
+
+  return()
+
+#========================================text-to-speech (unauthorised user)===================================================================
+
+async def _play_tts_unauthorised():
+
+  block: StartPlayTTS = StartPlayTTS(text="You are not authorised to enter this facility. Access denied. You may leave the facility premises immediately") 
+
+  (resultType, response) = await block.execute()
+
+  print(f'{response}')
+
+  return()
+#========================================text-to-speech (authorised user)===================================================================
+
+async def _play_tts_welcome():
+
+  block: StartPlayTTS = StartPlayTTS(text="Authorised user detected. You may enter the facility.")
+
+  (resultType, response) = await block.execute()
+
+  print(f'{response}')
+
+  return()
+
